@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:quizzzzzz/quiz_main.dart'; 
+import 'package:quizzzzzz/QuizMain.dart'; 
 
 void main() {
   runApp(QuizApp());
@@ -68,7 +68,6 @@ class WelcomePage extends StatelessWidget {
               SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/quiz');
                 },
                 child: Text('Iniciar Quiz'),
                 style: ElevatedButton.styleFrom(

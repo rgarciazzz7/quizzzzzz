@@ -11,7 +11,7 @@ class QuizApp extends StatelessWidget {
     return MaterialApp(
       title: 'Gênio Quiz - Dragon Ball e Naruto',
       theme: ThemeData(primarySwatch: Colors.orange),
-      initialRoute: '/', 
+      initialRoute: '/',
       routes: {
         '/': (context) => WelcomePage(),
         '/quiz': (context) => QuizPage(),
@@ -32,7 +32,10 @@ class WelcomePage extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [ Color.fromARGB(255, 0, 34, 228), const Color.fromARGB(255, 248, 58, 0),],
+            colors: [
+              Color.fromARGB(255, 0, 34, 228),
+              const Color.fromARGB(255, 248, 58, 0),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -67,25 +70,21 @@ class WelcomePage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 40),
-             ElevatedButton(
-  onPressed: () {
-    Navigator.pushNamed(
-      context, 
-      '/quiz',  
-    );
-  },
-  child: Text('Iniciar Quiz'),
-  style: ElevatedButton.styleFrom(
-    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-    textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-    backgroundColor: Color.fromARGB(255, 248, 58, 0,) ,
-    foregroundColor: Colors.white, 
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
-    ),
-  ),
-)
-
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/quiz');
+                },
+                child: Text('Iniciar Quiz'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  backgroundColor: Color.fromARGB(255, 248, 58, 0),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -105,6 +104,7 @@ class _QuizPageState extends State<QuizPage> {
   bool _isAnswered = false;
   int _timeLeft = 10;
   Timer? _timer;
+  bool _isTimeUp = false;
 
   final List<Map<String, dynamic>> _questions = [
     {
@@ -178,9 +178,21 @@ class _QuizPageState extends State<QuizPage> {
   void _startTimer() {
     _timeLeft = 10;
     _stopTimer();
+    _isTimeUp = false;
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_timeLeft == 0) {
-        _goToNextQuestion();
+        setState(() {
+          _isTimeUp = true; 
+        });
+        _stopTimer();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+            'Tempo esgotado!',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ));
       } else {
         setState(() {
           _timeLeft--;
@@ -196,6 +208,8 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void _answerQuestion(int selectedOption) {
+    if (_isTimeUp) return; 
+
     bool isCorrect = selectedOption == _questions[_currentQuestionIndex]['answer'];
     if (isCorrect) {
       _score += 10;
@@ -223,31 +237,30 @@ class _QuizPageState extends State<QuizPage> {
       if (_currentQuestionIndex < _questions.length - 1) {
         _currentQuestionIndex++;
         _isAnswered = false;
-        _startTimer();
+        _startTimer(); 
       } else {
-        _showScoreDialog();
+        _showFinalScore();
       }
     });
   }
 
-  void _showScoreDialog() {
-    String message = '';
-
-    if (_score >= 0 && _score <= 40) {
-      message = "Parece que você não sabe tanto sobre Dragon Ball e Naruto...";
-    } else if (_score >= 50 && _score <= 70) {
-      message = "Olha só... até que você sabe bastante!";
-    } else if (_score >= 80 && _score <= 90) {
-      message = "SABE MUITO!! Quase acertou todas...";
-    } else if (_score == 100) {
-      message = "Acertou todas. GÊNIO!!";
+  void _showFinalScore() {
+    String message = "Você acertou $_score pontos!";
+    if (_score == 100) {
+      message = "Parabéns! Você é um verdadeiro gênio!";
+    } else if (_score >= 80) {
+      message = "Muito bem! Você é incrível!";
+    } else if (_score >= 50) {
+      message = "Boa! Mas pode melhorar!";
+    } else {
+      message = "Você pode melhorar, tente novamente!";
     }
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('MUITO BEM!! você completou o quiz!'),
-        content: Text('$message\nVocê acertou $_score pontos de ${_questions.length * 10} possíveis.'),
+        title: Text('Quiz Finalizado!'),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () {
@@ -266,6 +279,7 @@ class _QuizPageState extends State<QuizPage> {
       _score = 0;
       _currentQuestionIndex = 0;
       _isAnswered = false;
+      _isTimeUp = false;
       _stopTimer();
     });
 
@@ -308,7 +322,7 @@ class _QuizPageState extends State<QuizPage> {
             height: 250,
           ),
           SizedBox(height: 20),
-          // Exibição do temporizador com animação mais moderna
+          
           TweenAnimationBuilder(
             tween: Tween<double>(begin: 0, end: _timeLeft / 10),
             duration: Duration(seconds: 1),
@@ -337,7 +351,22 @@ class _QuizPageState extends State<QuizPage> {
             },
           ),
           SizedBox(height: 20),
-          _buildQuizQuestion(),
+          
+          _isTimeUp
+            ? ElevatedButton(
+                onPressed: _resetQuiz, 
+                child: Text("Tente Novamente"),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  backgroundColor: Color.fromARGB(255, 248, 58, 0),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              )
+            : _buildQuizQuestion(),
         ],
       ),
     );

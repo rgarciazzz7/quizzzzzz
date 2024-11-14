@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'main_quiz.dart';
+import 'GênioQuiz.dart';
 
 class TelaInicial extends StatelessWidget {
   @override
